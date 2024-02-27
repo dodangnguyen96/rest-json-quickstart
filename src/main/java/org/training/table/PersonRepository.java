@@ -2,9 +2,10 @@ package org.training.table;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
+
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class PersonRepository implements PanacheRepository<Person> {
