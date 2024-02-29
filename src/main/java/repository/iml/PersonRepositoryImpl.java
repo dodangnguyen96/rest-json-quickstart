@@ -1,11 +1,14 @@
 package repository.iml;
 
 import entity.Person;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import org.hibernate.reactive.mutiny.Mutiny;
 import repository.PersonRepository;
 
 import java.util.List;
@@ -17,10 +20,12 @@ import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 public class PersonRepositoryImpl implements PersonRepository {
     @Inject
     EntityManager entityManager;
+    @Inject
+    Mutiny.SessionFactory sf;
 
     @Override
-    public Person findById(Integer id) {
-        return entityManager.find(Person.class, id);
+    public Uni<Person> findById(Integer id) {
+        return  sf.withTransaction((s,t) -> s.find(Person.class, id));
     }
 
     @Override
@@ -43,25 +48,24 @@ public class PersonRepositoryImpl implements PersonRepository {
 
     @Override
     @Transactional
-    public Response update(Integer id, Person person) {
-        Person existingPerson = findById(id);
-        if (existingPerson != null) {
-            existingPerson.setName(person.getName());
-            existingPerson.setName(person.getName());
-            existingPerson.setAge(person.getAge());
-            return Response.ok().status(NO_CONTENT).build();
-        }
-        return Response.ok().status(NOT_FOUND).build();
+    public Uni<Response> update(Integer id, Person person) {
+        return sf.withTransaction((s,t) -> s.find(Person.class, id)
+                        .onItem().ifNull().failWith(new WebApplicationException("Person missing from database.", NOT_FOUND))
+                        .invoke(entity -> {
+                            entity.setName(person.getName());
+                            entity.setName(person.getName());
+                            entity.setAge(person.getAge());
+                        }))
+                .map(entity -> Response.ok(entity).build());
     }
 
     @Override
     @Transactional
-    public Response delete(Integer id) {
-        Person person = findById(id);
-        if (person != null) {
-            entityManager.remove(person);
-            return Response.ok().status(NO_CONTENT).build();
-        };
-        return Response.ok().status(NOT_FOUND).build();
+    public Uni<Response> delete(Integer id) {
+        return sf.withTransaction((s, t) -> s.find(Person.class, id)
+                        .onItem().ifNull().failWith(new WebApplicationException("Person missing from database.", NOT_FOUND))
+                        // If entity exists then delete it
+                        .call(s::remove))
+                .replaceWith(Response.ok().status(NO_CONTENT)::build);
     }
 }

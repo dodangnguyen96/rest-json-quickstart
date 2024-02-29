@@ -3,7 +3,7 @@ package controller;
 import java.util.List;
 
 
-
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import entity.Person;
@@ -26,7 +26,7 @@ public class PersonResource {
 
     @GET
     @Path("/{id}")
-    public Person getPersonById(@PathParam("id") Integer id) {
+    public Uni<Person> getPersonById(@PathParam("id") Integer id) {
         return personRepository.findById(id);
     }
 
@@ -37,13 +37,13 @@ public class PersonResource {
 
     @PUT
     @Path("/{id}")
-    public Response updatePerson(@PathParam(("id")) Integer personId, Person person) {
+    public Uni<Response> updatePerson(@PathParam(("id")) Integer personId, Person person) {
         return personRepository.update(personId, person) ;
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deletePerson(@PathParam("id") Integer id) {
+    public Uni<Response> deletePerson(@PathParam("id") Integer id) {
         return personRepository.delete(id);
     }
 
