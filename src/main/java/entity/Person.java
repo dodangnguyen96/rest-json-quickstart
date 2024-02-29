@@ -4,6 +4,9 @@ package entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.ws.rs.WebApplicationException;
+
+import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Entity
 public class Person {
@@ -48,7 +51,7 @@ public class Person {
 
     public void setAge(int age) {
         if (age <= 0) {
-            throw new IllegalArgumentException("Age must be greater than zero");
+            throw new WebApplicationException("Age must be greater than zero",BAD_REQUEST);
         }
         this.age = age;
     }

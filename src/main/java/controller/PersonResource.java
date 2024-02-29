@@ -20,7 +20,7 @@ public class PersonResource {
     PersonRepository personRepository;
 
     @GET
-    public List<Person> getAllPersons() {
+    public Uni<List<Person>> getAllPersons() {
         return personRepository.findAll();
     }
 
@@ -31,7 +31,7 @@ public class PersonResource {
     }
 
     @POST
-    public Response createPerson(Person person) {
+    public Uni<Response> createPerson(Person person) {
         return personRepository.create(person);
     }
 
